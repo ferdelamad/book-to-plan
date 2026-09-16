@@ -72,9 +72,24 @@ Get a real chapter map before writing anything, in this order:
 
 Then **harvest the author's exercises**. Actionable books prescribe their
 own: Million Dollar Weekend has a `CHALLENGE` block per chapter, others use
-"try this", end-of-chapter questions, worksheets. Grep the text for them and
-keep them per chapter. They are the most valuable thing in the book for this
-purpose, and an exercise the author designed beats one you invent.
+"try this", end-of-chapter questions, worksheets. They are the most valuable
+thing in the book for this purpose — an exercise the author designed beats
+one you invent.
+
+`pdftotext -layout` keeps the indentation that makes these blocks stand out,
+so a heading scan finds them:
+
+```bash
+pdftotext -layout book.pdf book.txt
+grep -nE '^[[:space:]]*(CHALLENGE|EXERCISE|TRY THIS|ACTION STEP|YOUR TURN|DO THIS)[[:space:]]*:?[[:space:]]*$' book.txt
+```
+
+Read a few lines after each hit to get the exercise itself, and keep them
+grouped by chapter. Widen the alternation when a book names them something
+else — check the first chapter by hand to learn the book's own word before
+scanning the rest. A book where this finds nothing is either prose-only
+(wrong input, say so) or uses inline instructions, in which case read the
+chapter at cycle time and pull the imperatives out yourself.
 
 Sort each exercise into one of two kinds. The test is **can we finish it
 right now, in this conversation** — not whether it involves another person:
