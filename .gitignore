@@ -1,0 +1,9 @@
+# Plan files are personal — never commit one by accident.
+*-plan.md
+!examples/*-plan.md
+!tests/fixtures/*-plan.md
+
+__pycache__/
+*.pyc
+.DS_Store
+venv/
