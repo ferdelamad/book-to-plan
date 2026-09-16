@@ -87,9 +87,31 @@ grep -nE '^[[:space:]]*(CHALLENGE|EXERCISE|TRY THIS|ACTION STEP|YOUR TURN|DO THI
 Read a few lines after each hit to get the exercise itself, and keep them
 grouped by chapter. Widen the alternation when a book names them something
 else — check the first chapter by hand to learn the book's own word before
-scanning the rest. A book where this finds nothing is either prose-only
-(wrong input, say so) or uses inline instructions, in which case read the
-chapter at cycle time and pull the imperatives out yourself.
+scanning the rest.
+
+**A scan finding nothing does not mean the wrong book.** Atomic Habits
+returns zero hits: it prescribes inline in prose ("a simple two-step
+process: decide the type of person you want to be, prove it to yourself with
+small wins") and its named exercises start in chapter 4. Read the chapter at
+cycle time and pull the imperatives out yourself. Only a book that asks
+nothing of the reader anywhere is the wrong input.
+
+### Chapters that prescribe nothing
+
+A good actionable book still has theory chapters. Atomic Habits chapters 1–3
+argue for systems, identity and the four-step loop without giving the reader
+a task. Do not skip them and do not invent an exercise the author would not
+recognise. Derive the action from the chapter's own claim — chapter 1 argues
+goals lose to systems, so the action is to restate this reader's goal as a
+system — and **say that you are deriving it**:
+
+> Clear doesn't set an exercise here; chapter 1 is the argument. So this one
+> is mine, built from his claim, and you should push back if it doesn't
+> follow.
+
+Record it in the plan as `Author's challenge (in-field): None prescribed`
+with the derivation beside it, so a reader returning in six months can tell
+the author's instruction from yours.
 
 Sort each exercise into one of two kinds. The test is **can we finish it
 right now, in this conversation** — not whether it involves another person:

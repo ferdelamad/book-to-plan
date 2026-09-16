@@ -3,7 +3,7 @@ book: Million Dollar Weekend, Noah Kagan
 edition: Portfolio hardcover, 2024 — contents page confirmed by reader
 started: 2026-09-12
 updated: 2026-09-16
-chapters: 2 / 9
+chapters: 3 / 9
 status: in_progress
 ---
 
@@ -72,7 +72,7 @@ building. It isn't; it's two minutes.
 
 ## Ch 2 — The Unlimited Upside of Asking
 
-**Status:** committed
+**Status:** partial
 **The claim:** The Ask muscle is trainable and rejection is the training load,
 so setting a Rejection Goal turns each no into progress toward a quota instead
 of evidence against you — and a follow-up ask is roughly twice as likely to
@@ -94,8 +94,14 @@ I have to watch their face."
 usual and ask for 10 percent off — say nothing after asking. First move is
 walking in without the phone in hand.
 **Review on:** 2026-09-16
+**Takeaway:** I asked, and then I immediately explained myself — "sorry, I
+know that's weird, I'm doing a thing from a book." Saying nothing is the
+whole exercise and I couldn't do it. The discomfort isn't in the asking, it's
+in the two seconds of silence afterwards where I don't get to manage what
+they think of me. That's the actual muscle.
 
 **Parked for later:**
+- Redo the Coffee Challenge with no justification attached.
 - Follow-up ask on anything that came back no (ch 2's twice-as-likely rule).
 - Rejection résumé — write down the noes, per Blakely's father.
 
@@ -103,3 +109,49 @@ walking in without the phone in hand.
 - 2026-09-14 committed — review set for 2026-09-16
 - 2026-09-14 in-session challenge done: Rejection Goal = 25 noes by 2026-10-31
   (tally: 0/25)
+- 2026-09-16 partial — went Tue 8:20am and asked, got 10 percent off. Broke
+  the rule though: apologised and explained before they could answer. Counts
+  as asked, not as done. Rejection tally 0/25 (they said yes).
+
+---
+
+## Ch 3 — Finding Million-Dollar Ideas
+
+**Status:** committed
+**The claim:** Work backwards from a group of customers you already have
+access to, rather than forwards from an idea you find clever — the Customer
+First Approach fixes who you're selling to before what you're selling, which
+is what makes the three Ws fall out for free.
+**Why it matters here:** The idea already arrived in ch 1, unprompted, from
+someone who consults for the exact group. So this chapter is not being used
+to generate more ideas; it is being used to pressure-test the one that
+exists, which is the honest thing to do with a chapter you've already
+partially skipped ahead of.
+**Author's challenge (in-field):** Search engine queries — use search
+questions and forums to find ideas, or in this case to check whether the
+problem is widespread rather than personal.
+**Author's challenge (in-session, done 2026-09-16):** Top three groups.
+→ (1) iOS/Swift devs at 10–50 person startups, (2) the Swift Slack, (3) two
+ex-colleagues now running platform teams. All three reachable without an
+introduction.
+
+**What they said:** "I can name six people who've complained about this to me
+personally, which I kept telling myself was proof. It's not proof, it's six
+people who know me." On what would change their mind: "if strangers are
+paying for workarounds already."
+
+**Commitment:** Sat 2026-09-20, 9:00–10:00am at the kitchen table, search
+r/iOSProgramming and r/devops for CI-cost complaints from the last six
+months and write down what people say they currently pay for and what they
+do instead. Stop at one hour. First move is opening the subreddit, not the
+search.
+**Review on:** 2026-09-21
+
+**Parked for later:**
+- Solve your own problems — the full list, not just the CI one.
+- Marketplaces challenge — check what already sells in this space.
+- Bestsellers are your best friends.
+
+### Log
+- 2026-09-16 committed — review set for 2026-09-21
+- 2026-09-16 in-session challenge done: top three groups recorded above
