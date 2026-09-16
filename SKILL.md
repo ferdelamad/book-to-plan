@@ -92,6 +92,10 @@ Research counts as in-field even though nobody else is involved: "visit Etsy
 and write down one product idea" cannot be finished inside a chat turn, so
 scheduling it is honest and pretending otherwise is not.
 
+When reading a PDF, note each chapter's page range alongside its title. The
+cycle uses it to jump straight to the chapter instead of re-scanning the
+book every time.
+
 **Grounded when:** a confirmed chapter list exists, with each chapter's
 exercises harvested and sorted.
 
@@ -116,9 +120,15 @@ comes back abstract.
 
 Once per chapter, then stop and wait.
 
-1. **Summarise in 3–5 sentences.** The chapter's single claim, the mechanism
-   behind it, and one concrete example from the book. Leave out the
-   anecdotes, the studies, and the author's caveats.
+1. **Read this chapter, then summarise it in 3–5 sentences.** When a copy is
+   available, read that chapter's pages now rather than at grounding time —
+   a nine-chapter book read up front is eight chapters of context spent
+   before the reader has committed to anything. Give the chapter's single
+   claim, the mechanism behind it, and one concrete example from the book.
+   Leave out the anecdotes, the studies, and the author's caveats.
+
+   With no copy available, summarise from your own knowledge and say that is
+   what you are doing, so the reader can correct you.
 2. **Run the in-session exercises now.** Ask the question, get the answer,
    write it to the header. This takes a minute and it is the difference
    between a plan and a reading list.
