@@ -1,0 +1,25 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Parser and lint tests
+        run: python3 tests/test_due.py
+      - name: Shipped example must pass its own linter
+        run: python3 bin/due.py --lint examples/
+      - name: Shell scripts parse
+        run: bash -n bin/install-reminders.sh

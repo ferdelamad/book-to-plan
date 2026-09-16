@@ -165,11 +165,15 @@ $ python3 bin/due.py --lint ~/book-plans
 ```
 
 **macOS caveat, found the hard way:** privacy protection (TCC) blocks
-background agents from reading `~/Documents`, `~/Desktop` and `~/Downloads`. A
-plan kept in a project folder under one of those installs fine and then fails
-every morning with `Operation not permitted`. The installer refuses those paths
-and tells you what to do instead; `~/book-plans` is the default for this
-reason.
+background agents from reading `~/Documents`, `~/Desktop` and `~/Downloads`. An
+agent pointed at one of those installs fine and then fails every morning with
+`Operation not permitted`.
+
+This applies to **both** your plan directory and the location you run the
+installer from — a clone sitting in `~/Documents` can't be read by launchd
+either, which is why the install path above is `~/.claude/skills/`. The
+installer checks both and refuses with instructions rather than failing
+silently at nine every morning.
 
 ## Unscheduled commitments don't get to hide
 

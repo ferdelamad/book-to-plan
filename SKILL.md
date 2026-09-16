@@ -37,8 +37,15 @@ python3 "<skill-dir>/bin/due.py" ~/book-plans .
 ```
 
 Pass both the default directory and the current one, since a reader may keep
-a plan beside a project. Falls back to `ls *-plan.md ~/book-plans/*-plan.md`
-if Python is unavailable.
+a plan beside a project. If Python is unavailable, fall back to:
+
+```bash
+find ~/book-plans . -maxdepth 2 -name '*-plan.md' 2>/dev/null
+```
+
+Use `find` rather than a glob: zsh aborts the whole command when a glob
+matches nothing, and a redirect does not suppress that because the shell
+fails before `ls` runs.
 
 Reading is cheap, so this never gets skipped. Handle what it finds in this
 order:

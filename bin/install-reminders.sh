@@ -35,27 +35,70 @@ WATCH_DIR="$(cd "$WATCH_DIR" && pwd)"
 # reading ~/Documents, ~/Desktop and ~/Downloads. The agent would install
 # cleanly and then fail every morning with "Operation not permitted", so
 # refuse up front and say what to do instead.
-case "$WATCH_DIR/" in
-  "$HOME/Documents/"*|"$HOME/Desktop/"*|"$HOME/Downloads/"*)
-    cat >&2 <<WARN
-macOS protects $WATCH_DIR from background agents, so the daily check
-would fail with "Operation not permitted".
+protected() {
+  case "$1/" in
+    "$HOME/Documents/"*|"$HOME/Desktop/"*|"$HOME/Downloads/"*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
 
-Two ways forward:
+# Both the plan directory AND this script's own location must be readable by
+# a background agent. Checking only the former installs an agent that fails
+# every morning with "Operation not permitted".
+if protected "$WATCH_DIR"; then
+  cat >&2 <<WARN
+macOS protects $WATCH_DIR from background agents, so the daily
+check would fail with "Operation not permitted".
 
-  1. Keep plans somewhere unprotected (recommended):
-       mkdir -p ~/book-plans && mv "$WATCH_DIR"/*-plan.md ~/book-plans/
-       $0 ~/book-plans
+Keep plans somewhere unprotected:
+    mkdir -p ~/book-plans && mv "$WATCH_DIR"/*-plan.md ~/book-plans/
+    $0 ~/book-plans
 
-  2. Grant Full Disk Access to /usr/bin/python3 in
-     System Settings > Privacy & Security > Full Disk Access,
-     then re-run this installer.
+Or grant Full Disk Access to your python3 in
+System Settings > Privacy & Security > Full Disk Access.
 
 Nothing was installed.
 WARN
+  exit 1
+fi
+
+if protected "$SCRIPT_DIR"; then
+  cat >&2 <<WARN
+This script is running from $SCRIPT_DIR, which macOS
+shields from background agents — launchd could not read due.py there.
+
+Install the skill where Claude Code expects it, which is unprotected:
+    git clone https://github.com/ferdelamad/book-to-plan \
+      ~/.claude/skills/book-to-plan
+    ~/.claude/skills/book-to-plan/bin/install-reminders.sh ~/book-plans
+
+Nothing was installed.
+WARN
+  exit 1
+fi
+
+# launchd runs with no PATH, so the plist needs an absolute interpreter.
+# Prefer /usr/bin/python3 (always present on macOS, no PATH dependency) and
+# fall back to whatever python3 resolves to — but never to a shim that only
+# works inside an interactive shell.
+if [[ -x /usr/bin/python3 ]] && /usr/bin/python3 -c '' 2>/dev/null; then
+  PYTHON=/usr/bin/python3
+else
+  PYTHON="$(command -v python3 || true)"
+  [[ -n "$PYTHON" && -x "$PYTHON" ]] || {
+    echo "No usable python3 found. Install Xcode Command Line Tools:" >&2
+    echo "  xcode-select --install" >&2
     exit 1
-    ;;
-esac
+  }
+  case "$PYTHON" in
+    *"/shims/"*|*"/.pyenv/"*)
+      echo "python3 resolves to a shim ($PYTHON) that will not work under" >&2
+      echo "launchd. Install Xcode Command Line Tools for /usr/bin/python3:" >&2
+      echo "  xcode-select --install" >&2
+      exit 1
+      ;;
+  esac
+fi
 
 mkdir -p "$HOME/Library/LaunchAgents"
 cat > "$PLIST" <<PLISTEOF
@@ -67,7 +110,7 @@ cat > "$PLIST" <<PLISTEOF
   <key>Label</key><string>$LABEL</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/usr/bin/python3</string>
+    <string>$PYTHON</string>
     <string>$DUE</string>
     <string>--notify</string>
     <string>$WATCH_DIR</string>

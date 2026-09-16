@@ -10,6 +10,7 @@ Usage:
   due.py --notify [paths...]   also fire one macOS notification
   due.py --json [paths...]     machine-readable output
   due.py --lint [paths...]     check plans for inconsistencies
+  due.py --deep [paths...]     recurse fully (default: one level down)
 """
 
 from __future__ import annotations
@@ -76,21 +77,34 @@ def parse_plan(path: str) -> dict | None:
                       if counts else None}
 
 
-def collect(paths: list[str]) -> list[str]:
+def collect(paths: list[str], deep: bool = False) -> list[str]:
+    """Find plan files, without walking an entire home directory.
+
+    A directory is searched at its own level and one level down, which
+    covers `~/book-plans` and a repo with plans in a subfolder. `--deep`
+    opts into full recursion for anyone who has filed them deeper.
+    """
+    patterns = ["*-plan.md", os.path.join("*", "*-plan.md")]
+    if deep:
+        patterns = [os.path.join("**", "*-plan.md")]
     found: list[str] = []
     for p in paths or ["."]:
         if os.path.isdir(p):
-            found += sorted(glob.glob(os.path.join(p, "**", "*-plan.md"),
-                                      recursive=True))
+            for pattern in patterns:
+                found += glob.glob(os.path.join(p, pattern), recursive=deep)
         elif os.path.isfile(p):
             found.append(p)
-    return found
+    # Same plan reachable by two paths should be reported once.
+    seen: dict[str, str] = {}
+    for f in found:
+        seen.setdefault(os.path.realpath(f), f)
+    return sorted(seen.values())
 
 
-def lint(paths: list[str]) -> int:
+def lint(paths: list[str], deep: bool = False) -> int:
     """Check that hand-edited plans still say what they mean."""
     problems: list[str] = []
-    for path in collect(paths):
+    for path in collect(paths, deep):
         plan = parse_plan(path)
         if not plan:
             continue
@@ -143,15 +157,17 @@ def main() -> int:
     ap.add_argument("--today", default=None, help="override date (testing)")
     ap.add_argument("--lint", action="store_true",
                     help="check plan files for inconsistencies")
+    ap.add_argument("--deep", action="store_true",
+                    help="recurse fully instead of one level down")
     args = ap.parse_args()
 
     if args.lint:
-        return lint(args.paths)
+        return lint(args.paths, args.deep)
 
     today = args.today or dt.date.today().isoformat()
     due, upcoming, undated = [], [], []
 
-    for path in collect(args.paths):
+    for path in collect(args.paths, args.deep):
         plan = parse_plan(path)
         if not plan:
             continue
