@@ -24,8 +24,9 @@ have it; step 7 covers what that costs.
 
 The plan file is the only source of truth and you are its only writer. Full
 schema in [reference/plan-format.md](reference/plan-format.md). The tooling
-this file calls (`bin/due.py`, `bin/install-reminders.sh`) ships in this
-skill's own directory.
+this file calls ships beside it: `bin/due.py` and
+`bin/install-reminders.sh`, resolved against the base directory given when
+this skill loads. Substitute that path for `<skill-dir>` below.
 
 Get today's date from `date +%Y-%m-%d` before writing any date. Never infer one.
 
@@ -68,16 +69,21 @@ own: Million Dollar Weekend has a `CHALLENGE` block per chapter, others use
 keep them per chapter. They are the most valuable thing in the book for this
 purpose, and an exercise the author designed beats one you invent.
 
-Sort each exercise into one of two kinds — this decides everything downstream:
+Sort each exercise into one of two kinds. The test is **can we finish it
+right now, in this conversation** — not whether it involves another person:
 
-- **In-session** — a decision, number, or list, needing nobody else. Set a
-  budget, name your target customer, pick a rejection quota. **Do these
-  during the conversation**, right now, and store the answer in the header.
-  They must never become scheduled commitments; "decide your values by
-  Friday" is how a plan dies.
-- **In-field** — needs another person, a place, or a specific time. Ask a
-  stranger for a discount, text a friend, message ten prospects. **These
-  become the commitments.**
+- **In-session** — answerable from what the reader already knows, in under
+  five minutes. Pick a revenue target, name your three closest groups, list
+  problems you personally have. **Do these during the conversation** and
+  store the answer in the header. They must never become scheduled
+  commitments; "decide your values by Friday" is how a plan dies.
+- **In-field** — needs time, a place, another person, or research. Ask a
+  stranger for a discount, text a friend, browse a marketplace for an hour,
+  message ten prospects. **These become the commitments.**
+
+Research counts as in-field even though nobody else is involved: "visit Etsy
+and write down one product idea" cannot be finished inside a chat turn, so
+scheduling it is honest and pretending otherwise is not.
 
 **Grounded when:** a confirmed chapter list exists, with each chapter's
 exercises harvested and sorted.
@@ -120,6 +126,12 @@ Once per chapter, then stop and wait.
    (open the thread, walk in without your phone, put the shoes by the door).
    One chapter yields one scheduled commitment. A chapter with four
    challenges still yields one, and the rest go to **Parked for later**.
+
+   When a chapter offers several in-field exercises, pick the one closest to
+   **where the reader said it broke** in step 3. A reader who builds but
+   never asks needs the asking exercise, not the third idea-generation
+   worksheet. Only when none of them touches the break point do you fall
+   back to the author's own ordering.
 6. **Set a review date**, append the chapter block, update the frontmatter
    and the `MEMORY.md` index line.
 
@@ -158,7 +170,15 @@ Ask what happened, in their words, before offering any new chapter. Then:
 - `dropped` — one line on why, then move on without relitigating it.
 
 Append a dated line to the chapter's `### Log` and leave earlier lines
-untouched.
+untouched, then confirm the file still holds together:
+
+```bash
+python3 "<skill-dir>/bin/due.py" --lint ~/book-plans
+```
+
+The reader edits this file by hand, so an edit can leave a `done` commitment
+with no takeaway or a commitment with no date. Fix what the linter reports
+before opening the next chapter.
 
 Three consecutive `skipped` commitments mean the plan is wrong, not the
 reader. Stop opening chapters and revisit the week shape from step 3.

@@ -9,6 +9,7 @@ Usage:
   due.py [paths...]            report due commitments (default: cwd)
   due.py --notify [paths...]   also fire one macOS notification
   due.py --json [paths...]     machine-readable output
+  due.py --lint [paths...]     check plans for inconsistencies
 """
 
 from __future__ import annotations
@@ -23,6 +24,8 @@ import subprocess
 import sys
 
 OPEN_STATES = {"committed"}  # "due" is derived from the date, never stored
+KNOWN_STATES = {"committed", "done", "partial", "skipped", "dropped"}
+RESOLVED_STATES = {"done", "partial"}
 CHAPTER_RE = re.compile(r"^##\s+Ch\s+([\w.]+)\s*[—-]\s*(.+?)\s*$", re.M)
 # A field value runs until the next bold field, the next heading, or a blank
 # line followed by either — plan files are hand-wrapped, so values span lines.
@@ -36,7 +39,9 @@ FIELD_RE = {
     "status": re.compile(r"^\*\*Status:\*\*\s*(\S+)", re.M),
     "review": re.compile(r"^\*\*Review on:\*\*\s*(\d{4}-\d{2}-\d{2})", re.M),
     "commitment": _field("Commitment"),
+    "takeaway": _field("Takeaway"),
 }
+CHAPTERS_RE = re.compile(r"^chapters:\s*(\d+)\s*/\s*(\d+)", re.M)
 BOOK_RE = re.compile(r"^book:\s*(.+?)\s*$", re.M)
 
 
@@ -58,12 +63,17 @@ def parse_plan(path: str) -> dict | None:
     for i, (start, num, title) in enumerate(bounds):
         end = bounds[i + 1][0] if i + 1 < len(bounds) else len(text)
         block = text[start:end]
+        has_log = "### Log" in block
         fields = {}
         for key, rx in FIELD_RE.items():
             m = rx.search(block)
             fields[key] = " ".join(m.group(1).split()) if m else None
-        chapters.append({"chapter": num, "title": title, **fields})
-    return {"path": path, "book": book, "chapters": chapters}
+        chapters.append({"chapter": num, "title": title,
+                         "has_log": has_log, **fields})
+    counts = CHAPTERS_RE.search(text)
+    return {"path": path, "book": book, "chapters": chapters,
+            "counts": (int(counts.group(1)), int(counts.group(2)))
+                      if counts else None}
 
 
 def collect(paths: list[str]) -> list[str]:
@@ -77,13 +87,66 @@ def collect(paths: list[str]) -> list[str]:
     return found
 
 
+def lint(paths: list[str]) -> int:
+    """Check that hand-edited plans still say what they mean."""
+    problems: list[str] = []
+    for path in collect(paths):
+        plan = parse_plan(path)
+        if not plan:
+            continue
+
+        def flag(ch: dict, msg: str) -> None:
+            problems.append(f"{path}: Ch {ch['chapter']} — {msg}")
+
+        for ch in plan["chapters"]:
+            state = (ch["status"] or "").lower()
+            if not state:
+                flag(ch, "no Status")
+            elif state not in KNOWN_STATES:
+                flag(ch, f"unknown Status {ch['status']!r} "
+                         f"(expected one of {', '.join(sorted(KNOWN_STATES))})")
+            if state in RESOLVED_STATES:
+                if not ch["takeaway"]:
+                    flag(ch, f"{state} but no Takeaway — the takeaway is "
+                             "written after the action, and it is the point")
+            if ch["commitment"] and not ch["review"] and state in OPEN_STATES:
+                flag(ch, "commitment with no Review on — an intention, "
+                         "not a commitment")
+            if ch["review"] and not ch["commitment"]:
+                flag(ch, "Review on with no Commitment")
+            if not ch["has_log"]:
+                flag(ch, "no ### Log section — state changes go unrecorded")
+
+        # `chapters: N / M` counts chapters worked through, not commitments
+        # completed — progress through the book must not go down when a
+        # commitment is skipped.
+        worked = len(plan["chapters"])
+        if plan["counts"] and plan["counts"][0] != worked:
+            problems.append(
+                f"{path}: frontmatter says {plan['counts'][0]} chapter(s) "
+                f"worked through but {worked} chapter block(s) exist")
+
+    if not problems:
+        print("All plans consistent.")
+        return 0
+    print(f"{len(problems)} problem(s):\n")
+    for item in problems:
+        print(f"  {item}")
+    return 1
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(add_help=True)
     ap.add_argument("paths", nargs="*")
     ap.add_argument("--notify", action="store_true")
     ap.add_argument("--json", action="store_true", dest="as_json")
     ap.add_argument("--today", default=None, help="override date (testing)")
+    ap.add_argument("--lint", action="store_true",
+                    help="check plan files for inconsistencies")
     args = ap.parse_args()
+
+    if args.lint:
+        return lint(args.paths)
 
     today = args.today or dt.date.today().isoformat()
     due, upcoming, undated = [], [], []

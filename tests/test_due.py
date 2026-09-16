@@ -26,6 +26,13 @@ def run(*args: str) -> tuple[int, dict]:
     return proc.returncode, json.loads(proc.stdout)
 
 
+def run_lint(*args: str) -> tuple[int, str]:
+    proc = subprocess.run(
+        [sys.executable, str(DUE), "--lint", *args],
+        capture_output=True, text=True, check=False)
+    return proc.returncode, proc.stdout
+
+
 class TestMessyPlan(unittest.TestCase):
     def setUp(self) -> None:
         _, self.data = run("--today", "2026-09-16", str(MESSY))
@@ -72,6 +79,33 @@ class TestDemoPlan(unittest.TestCase):
         _, data = run("--today", "2026-09-15", str(DEMO))
         self.assertEqual(data["due"], [])
         self.assertEqual(len(data["upcoming"]), 1)
+
+
+class TestLint(unittest.TestCase):
+    def test_demo_plan_is_consistent(self) -> None:
+        code, out = run_lint(str(DEMO))
+        self.assertEqual(code, 0, out)
+        self.assertIn("consistent", out)
+
+    def test_resolved_without_takeaway_is_flagged(self) -> None:
+        """A done commitment with no takeaway loses the point of the tool."""
+        code, out = run_lint(str(MESSY))
+        self.assertEqual(code, 1)
+        self.assertIn("no Takeaway", out)
+
+    def test_commitment_without_review_date_is_flagged(self) -> None:
+        _, out = run_lint(str(MESSY))
+        self.assertIn("not a commitment", out)
+
+    def test_missing_log_is_flagged(self) -> None:
+        _, out = run_lint(str(MESSY))
+        self.assertIn("no ### Log", out)
+
+    def test_chapter_count_counts_blocks_not_completions(self) -> None:
+        """`chapters: N / M` is progress through the book: it must not drop
+        when a commitment is skipped rather than done."""
+        _, out = run_lint(str(DEMO))
+        self.assertNotIn("worked through but", out)
 
 
 class TestExitCodes(unittest.TestCase):

@@ -20,7 +20,7 @@ book: <title>, <author>
 edition: <what the chapter map was grounded against>
 started: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
-chapters: <N done> / <M total>
+chapters: <N worked through> / <M total>
 status: in_progress | completed | abandoned
 ---
 
@@ -72,6 +72,8 @@ Set in session on 2026-09-12 (ch 1).
 - **Takeaway** is what the reader learned by *doing* it, and it is empty
   until the outcome is in. A takeaway written from the text is a book
   summary; this file is not that.
+- **chapters** counts chapter blocks written, not commitments completed.
+  Progress through the book must not go down when a commitment is skipped.
 - **Log** is append-only. Earlier lines are never rewritten, because the
   history of what happened is worth more than the current state.
 - Nothing references another file by name. Chapter number and title live

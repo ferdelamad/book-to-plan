@@ -150,6 +150,20 @@ $ python3 bin/due.py ~/book-plans
 Exits non-zero when something needs action, so it composes in a shell prompt
 or a git hook. `--json` for scripting.
 
+Because you're meant to hand-edit these files, there's a linter for when an
+edit breaks something:
+
+```
+$ python3 bin/due.py --lint ~/book-plans
+
+2 problem(s):
+
+  ~/book-plans/atomic-habits-plan.md: Ch 4 — done but no Takeaway — the
+    takeaway is written after the action, and it is the point
+  ~/book-plans/atomic-habits-plan.md: Ch 6 — commitment with no Review on —
+    an intention, not a commitment
+```
+
 **macOS caveat, found the hard way:** privacy protection (TCC) blocks
 background agents from reading `~/Documents`, `~/Desktop` and `~/Downloads`. A
 plan kept in a project folder under one of those installs fine and then fails
