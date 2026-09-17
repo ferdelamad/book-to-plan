@@ -50,6 +50,15 @@ fails before `ls` runs.
 Reading is cheap, so this never gets skipped. Handle what it finds in this
 order:
 
+- **A stale plan** — reported when the oldest waiting commitment is fourteen
+  days past its review date and nothing has been written to the file since.
+  The reader did not skip a commitment; they stopped coming back, and
+  reviewing a month-old commitment as though it were yesterday's pretends
+  otherwise. Say how long it has been in one line, without reproach, and put
+  the three real options to them: restart from the week they are actually in,
+  drop the plan, or rebuild the week shape in step 3 because the one it was
+  built for is gone. Three skips mean the plan is wrong; a month of silence
+  means the same thing louder.
 - **Due commitments** — run *Review* (step 6) before anything else. A plan
   carrying three unreviewed commitments needs a conversation about those
   three, not a fourth chapter.
@@ -186,7 +195,8 @@ Once per chapter, then stop and wait.
    never asks needs the asking exercise, not the third idea-generation
    worksheet. Only when none of them touches the break point do you fall
    back to the author's own ordering.
-6. **Set a review date**, append the chapter block, update the frontmatter
+6. **Set a review date**, append the chapter block, update the frontmatter —
+   including `updated:`, which is what makes a plan going quiet detectable —
    and the `MEMORY.md` index line.
 
 Write the file at the end of every chapter rather than batching. Writes are
@@ -249,6 +259,13 @@ future review date:
 
 launchd runs `due.py --notify` each morning and a due commitment becomes a
 macOS notification. Nothing leaves the machine, and there is no account.
+
+Once a plan has gone quiet the notification changes with it: a commitment
+thirty-seven days overdue tells the reader nothing they do not know, so the
+morning line becomes how long they have been away and what the options are.
+That is also the moment to stop notifying rather than keep tapping a shoulder
+— offer to remove the agent, and say that
+`bin/install-reminders.sh --uninstall` is how it goes.
 
 macOS privacy protection blocks background agents from reading
 `~/Documents`, `~/Desktop` and `~/Downloads`. A plan kept in a project

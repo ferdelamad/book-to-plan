@@ -9,14 +9,17 @@ commitment with no review date.
 
 import json
 import pathlib
+import re
 import subprocess
 import sys
+import tempfile
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DUE = ROOT / "bin" / "due.py"
 MESSY = ROOT / "tests" / "fixtures" / "hand-edited-plan.md"
 STATES = ROOT / "tests" / "fixtures" / "states-plan.md"
+QUIET = ROOT / "tests" / "fixtures" / "stale-plan.md"
 EXAMPLES = ROOT / "examples"
 DEMO = EXAMPLES / "million-dollar-weekend-plan.md"
 ATOMIC = EXAMPLES / "atomic-habits-plan.md"
@@ -27,6 +30,13 @@ def run(*args: str) -> tuple[int, dict]:
         [sys.executable, str(DUE), "--json", *args],
         capture_output=True, text=True, check=False)
     return proc.returncode, json.loads(proc.stdout)
+
+
+def run_text(*args: str) -> tuple[int, str]:
+    proc = subprocess.run(
+        [sys.executable, str(DUE), *args],
+        capture_output=True, text=True, check=False)
+    return proc.returncode, proc.stdout
 
 
 def run_lint(*args: str) -> tuple[int, str]:
@@ -92,6 +102,95 @@ class TestStates(unittest.TestCase):
         self.assertEqual(open_chapters, {"1", "2"})
 
 
+class TestStale(unittest.TestCase):
+    """A plan the reader stopped returning to. The quiet fixture's oldest
+    commitment came due 2026-08-25 and the file was last written 2026-08-20."""
+
+    def variant(self, tmp: str, **edits: str) -> str:
+        """The quiet fixture with frontmatter lines swapped, for the cases
+        that differ from it by one field."""
+        text = QUIET.read_text(encoding="utf-8")
+        for key, value in edits.items():
+            text = re.sub(rf"^{key}: .*$", f"{key}: {value}",
+                          text, count=1, flags=re.M)
+        path = pathlib.Path(tmp) / "variant-plan.md"
+        path.write_text(text, encoding="utf-8")
+        return str(path)
+
+    def test_gone_quiet_is_reported(self) -> None:
+        _, data = run("--today", "2026-09-16", str(QUIET))
+        self.assertEqual(len(data["stale"]), 1)
+        entry = data["stale"][0]
+        self.assertEqual(entry["days"], 22)  # since 2026-08-25
+        self.assertEqual(entry["open"], 2)
+        self.assertEqual(entry["oldest_review"], "2026-08-25")
+
+    def test_threshold_is_days_waiting_not_days_since_edit(self) -> None:
+        """Fourteen days after the review date, not after the last write —
+        which was five days earlier."""
+        _, on = run("--today", "2026-09-08", str(QUIET))
+        _, before = run("--today", "2026-09-07", str(QUIET))
+        self.assertEqual(len(on["stale"]), 1)
+        self.assertEqual(before["stale"], [])
+
+    def test_an_untouched_plan_with_future_reviews_is_not_stale(self) -> None:
+        """The false positive worth avoiding: a commitment reviewed months
+        out leaves the file untouched for months and nothing is wrong."""
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self.variant(tmp, updated="2026-01-01")
+            text = pathlib.Path(path).read_text(encoding="utf-8")
+            text = text.replace("2026-08-25", "2027-08-25")
+            text = text.replace("**Review on:** 2026-08-29",
+                                "**Review on:** 2027-08-29")
+            pathlib.Path(path).write_text(text, encoding="utf-8")
+            _, data = run("--today", "2026-09-16", path)
+        self.assertEqual(data["stale"], [])
+        self.assertEqual(len(data["upcoming"]), 2)
+
+    def test_coming_back_after_it_came_due_clears_stale(self) -> None:
+        """Overdue and engaged is a different problem from overdue and gone;
+        three skipped commitments is what answers the first one."""
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self.variant(tmp, updated="2026-09-14")
+            _, data = run("--today", "2026-09-16", path)
+        self.assertEqual(data["stale"], [])
+        self.assertEqual(len(data["due"]), 2)
+
+    def test_finished_plan_never_goes_stale(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self.variant(tmp, status="completed")
+            _, data = run("--today", "2026-12-31", path)
+        self.assertEqual(data["stale"], [])
+
+    def test_no_updated_field_means_no_guessing(self) -> None:
+        """Without `updated:` there is nothing to measure; the linter says so
+        instead of the report inventing a date."""
+        _, data = run("--today", "2026-12-31", str(MESSY))
+        self.assertEqual(data["stale"], [])
+
+    def test_stale_replaces_the_overdue_listing(self) -> None:
+        """The whole point: not another day count on the same commitments."""
+        _, out = run_text("--today", "2026-09-16", str(QUIET))
+        self.assertIn("[stale]", out)
+        self.assertIn("waiting 22 days", out)
+        self.assertNotIn("overdue", out)
+
+    def test_stale_after_zero_disables_it(self) -> None:
+        _, data = run("--today", "2026-09-16", "--stale-after", "0", str(QUIET))
+        self.assertEqual(data["stale"], [])
+        _, out = run_text("--today", "2026-09-16", "--stale-after", "0",
+                          str(QUIET))
+        self.assertIn("22d overdue", out)
+
+    def test_exit_code_signals_action_needed(self) -> None:
+        code, _ = run("--today", "2026-09-16", str(QUIET))
+        self.assertEqual(code, 1)
+
+    def test_quiet_fixture_lints_clean(self) -> None:
+        code, out = run_lint(str(QUIET))
+        self.assertEqual(code, 0, out)
+
+
 class TestShippedExamples(unittest.TestCase):
     """Content-agnostic: the examples must parse and lint, whatever they say."""
 
@@ -129,6 +228,12 @@ class TestLint(unittest.TestCase):
     def test_commitment_without_review_date_is_flagged(self) -> None:
         _, out = run_lint(str(MESSY))
         self.assertIn("not a commitment", out)
+
+    def test_missing_updated_is_flagged(self) -> None:
+        """A plan with open commitments and no `updated:` cannot be told
+        apart from one being worked on."""
+        _, out = run_lint(str(MESSY))
+        self.assertIn("no `updated:`", out)
 
     def test_missing_log_is_flagged(self) -> None:
         _, out = run_lint(str(MESSY))

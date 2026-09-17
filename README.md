@@ -136,7 +136,7 @@ Restart Claude Code, and the skill is available.
 |---|---|
 | `/book-to-plan ~/book.pdf` | Ground the book, set your situation, start chapter 1 |
 | `/book-to-plan` | Resume — reviews anything due before opening a new chapter |
-| `due.py ~/book-plans` | What's due right now |
+| `due.py ~/book-plans` | What's due right now — and what's gone quiet |
 | `due.py --lint ~/book-plans` | Check a hand-edited plan still holds together |
 
 ---
@@ -240,6 +240,31 @@ $ python3 bin/due.py ~/book-plans
 Exits non-zero when something needs action, so it composes in a shell prompt
 or a git hook. `--json` for scripting.
 
+### When you stop coming back
+
+The real failure mode isn't skipping a commitment, it's quietly not opening
+the plan again. Counting the days late doesn't help by then — you know — so
+once the oldest waiting commitment is two weeks past its review date with
+nothing written since, the report stops listing it and says the other thing:
+
+```
+$ python3 bin/due.py ~/book-plans
+
+1 plan(s) gone quiet:
+
+  [stale] Atomic Habits, James Clear — waiting 22 days, last touched 2026-08-20
+     2 commitment(s) still open, oldest review was due 2026-08-25.
+     Counting the days late stopped being useful here. The honest options are
+     to restart the plan, drop it, or revisit the week shape it was built for.
+     ~/book-plans/atomic-habits-plan.md
+```
+
+The morning notification changes with it, and the skill opens that session by
+asking which of the three you want rather than reviewing a month-old
+commitment as though it were yesterday's. Overdue but still being edited
+isn't stale — that's a plan you're in, and three skips in a row is what
+answers it. `--stale-after N` moves the line, `0` turns it off.
+
 Because you're meant to hand-edit these files, there's a linter for when an
 edit breaks something:
 
@@ -323,8 +348,8 @@ reference/plan-format.md    the plan file schema
 bin/due.py                  what's due; non-zero exit when action is needed
 bin/install-reminders.sh    register or remove the daily launchd check
 examples/                   two worked plans, three chapters each
-tests/test_due.py           17 tests
-tests/fixtures/             a deliberately messy hand-edited plan
+tests/test_due.py           32 tests
+tests/fixtures/             a messy hand-edited plan, and one gone quiet
 ```
 
 Plan files are hand-edited by real people, so the parser is tested against a

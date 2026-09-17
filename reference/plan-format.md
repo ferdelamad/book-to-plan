@@ -72,6 +72,9 @@ Set in session on 2026-09-12 (ch 1).
 - **Takeaway** is what the reader learned by *doing* it, and it is empty
   until the outcome is in. A takeaway written from the text is a book
   summary; this file is not that.
+- **updated** is the date the file last changed, and it is load-bearing: a
+  commitment past its review date with no write since is how a plan going
+  quiet is told apart from one being worked. Set it on every write.
 - **chapters** counts chapter blocks written, not commitments completed.
   Progress through the book must not go down when a commitment is skipped.
 - **Log** is append-only. Earlier lines are never rewritten, because the
@@ -91,6 +94,19 @@ Set in session on 2026-09-12 (ch 1).
 
 `dropped` is a legitimate ending. A reader who tries an idea against their
 own life and rejects it has used the book correctly.
+
+### Stale is not a state
+
+A plan nobody has returned to is not a sixth status, because nothing would
+ever write it — the reader is not there to be asked. `bin/due.py` derives it
+the way it derives `due`: the oldest waiting commitment is fourteen days past
+its review date (`--stale-after N` to change it) and `updated` is no later
+than that date. Overdue *and* edited since is a reader still in it; that is
+what `skipped` and the three-skip rule are for.
+
+The report then says how long they have been gone instead of listing the same
+commitments under a larger number, which is the count they already stopped
+reading.
 
 ## Index line
 
